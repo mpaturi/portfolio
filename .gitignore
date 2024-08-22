@@ -1,0 +1,25 @@
+.vs
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+
+# Environments
+.env
+.venv
+env/
+venv/
+
+# IDE
+.idea/
+
+# Static files
+static/
+
+# Sensitive files
+instance/
+.flaskenv
+
+*.zip

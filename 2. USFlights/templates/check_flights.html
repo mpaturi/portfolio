@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Check Flights</title>
+</head>
+<body>
+    <h1>Check Flights</h1>
+    <form method="post">
+        <label for='dep_city'>Departure City:</label>
+        <select name="dep_city" id="dep_city">
+            {% for dep_city in city_names %}
+            <option value="{{ dep_city }}">{{ dep_city }}</option>
+            <!--option value="{{ dep_city }}" {% if dep_city == dep_city %}selected{% endif %}>{{ dep_city }}</option-->
+            {% endfor %}
+        </select>
+        <label for="arr_city">Arrival City:</label>
+        <select name="arr_city" id="arr_city">
+            {% for arr_city in city_names %}
+            <option value="{{ arr_city }}">{{ arr_city }}</option>
+            <!--option value="{{ arr_city }}" {% if arr_city == arr_city %}selected{% endif %}>{{ arr_city }}</option-->
+            {% endfor %}
+        </select>
+        <button type="submit">Search</button>
+    </form>
+    {% if results %}
+    <h2>Flight Results</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Airline</th>
+                <th>Depature</th>
+                <th>Duration</th>
+                <th>Distance Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in results %}
+            <tr>
+                <td>{{ row.Airline }}</td>
+                <td>{{ row.DepTime_label }}</td>
+                <td>{{ row.Flight_Duration}}</td>
+                <td>{{ row.Distance_type }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</body>
+</html>
