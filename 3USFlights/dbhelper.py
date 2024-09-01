@@ -1,3 +1,4 @@
+import os
 import pyodbc
 import logging
 
@@ -6,17 +7,16 @@ class DB:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.ERROR)  # Set log level if needed
-        #connect to the AWS MSSQL database - portfolio.cpououw2sybk.us-east-2.rds.amazonaws.com
+
         try:
-            server='oltp.cpououw2sybk.us-east-2.rds.amazonaws.com'
-            username='admin'
-            password='Admin1234'
-            database='Flights'
-            driver ='{ODBC Driver 17 for SQL Server}'
-            connection_string = f'DRIVER={driver};SERVER={server};DATABASE={database};UID={username};PWD={password}'
+            # Retrieve the DSN from environment variables or use a default value
+            self.dsn = os.getenv('DB_DSN', 'AWSMYSQL')
+
+            # Create the connection string using the DSN
+            self.connection_string = f"DSN={self.dsn};"
 
             # Establish a connection
-            self.connection = pyodbc.connect(connection_string)
+            self.connection = pyodbc.connect(self.connection_string)
             # Create a cursor from the connection
             self.mycursor = self.connection.cursor()
             print("Connection successful!")
@@ -28,9 +28,9 @@ class DB:
         city = []
         try:
             self.mycursor.execute("""
-                    SELECT DISTINCT Dep_CityName FROM USFlightsJan1Wk
+                    SELECT DISTINCT Dep_CityName FROM flights.usflightsjan1wk
                     UNION
-                    SELECT DISTINCT Arr_CityName FROM USFlightsJan1Wk
+                    SELECT DISTINCT Arr_CityName FROM flights.usflightsjan1wk
                     """)
             data = self.mycursor.fetchall()
             city = [item[0] for item in data]
@@ -43,7 +43,7 @@ class DB:
         try:
             self.mycursor.execute("""
                     SELECT Airline, DepTime_label, Flight_Duration, Distance_type 
-                    FROM USFlightsJan1Wk
+                    FROM flights.usflightsjan1wk
                     WHERE Dep_CityName = ? AND Arr_CityName = ?
                     """, (source, destination))
             data = self.mycursor.fetchall()
@@ -57,7 +57,7 @@ class DB:
         try:
             self.mycursor.execute("""
             SELECT Airline, COUNT(*) 
-            FROM USFlightsJan1Wk
+            FROM flights.usflightsjan1wk
             GROUP BY Airline
             """)
             data = self.mycursor.fetchall()
@@ -73,9 +73,9 @@ class DB:
         try:
             self.mycursor.execute("""
                     SELECT Dep_CityName, COUNT(*) 
-                    FROM (SELECT Dep_CityName FROM USFlightsJan1Wk
+                    FROM (SELECT Dep_CityName FROM flights.usflightsjan1wk
                     UNION ALL
-                    SELECT Arr_CityName FROM USFlightsJan1Wk) t
+                    SELECT Arr_CityName FROM flights.usflightsjan1wk) t
                     GROUP BY t.Dep_CityName
                     ORDER BY COUNT(*) DESC
                     """)
@@ -92,7 +92,7 @@ class DB:
         try:
             self.mycursor.execute("""
                     SELECT FlightDate, COUNT(*) 
-                    FROM USFlightsJan1Wk
+                    FROM flights.usflightsjan1wk
                     GROUP BY FlightDate
                     """)
             data = self.mycursor.fetchall()
