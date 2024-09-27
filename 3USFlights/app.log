@@ -1,0 +1,10 @@
+2024-09-06 15:24:25,553 - DEBUG - Debug message
+2024-09-06 15:24:25,553 - INFO - Informational message
+2024-09-06 15:24:25,553 - WARNING - Warning message
+2024-09-06 15:24:25,553 - ERROR - Error message
+2024-09-06 15:24:25,553 - CRITICAL - Critical message
+2024-09-06 15:24:25,598 - WARNING -  * Debugger is active!
+2024-09-06 15:24:25,600 - INFO -  * Debugger PIN: 592-160-234
+2024-09-06 15:25:11,033 - INFO -  * Detected change in 'C:\\Users\\milli\\Desktop\\CodeForGit\\GitPortfolio\\3USFlights\\application.py', reloading
+2024-09-06 15:25:11,034 - INFO -  * Detected change in 'C:\\Users\\milli\\Desktop\\CodeForGit\\GitPortfolio\\3USFlights\\application.py', reloading
+2024-09-06 15:25:11,035 - INFO -  * Detected change in 'C:\\Users\\milli\\Desktop\\CodeForGit\\GitPortfolio\\3USFlights\\application.py', reloading
