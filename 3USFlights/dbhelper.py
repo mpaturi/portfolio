@@ -9,16 +9,17 @@ from contextlib import contextmanager
 class DB:
     def __init__(self):
         # Ensure the log directory exists
-        self.log_dir = '/var/log/3USFlights'
+        #self.log_dir = '/var/log/3USFlights'
+        self.log_dir = os.path.join(os.path.dirname(__file__), 'logs')
         os.makedirs(self.log_dir, exist_ok=True)
 
         # Set up logging
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.INFO)
 
         log_file_path = os.path.join(self.log_dir, 'app.log')
         handler = logging.FileHandler(log_file_path)
-        handler.setLevel(logging.DEBUG)
+        handler.setLevel(logging.INFO)
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
@@ -103,17 +104,30 @@ class DB:
             self.logger.error(f"Error fetching city names: {e}")
         return city
 
-    def fetch_all_flights(self, source, destination):
+    def fetch_all_flights(self, source, destination, arrivaldelay="On Time"):
+        # Default to 0 if "On Time" is selected
+        if arrivaldelay == "On Time" or arrivaldelay == "":
+            arrivaldelay_value = 0
+        elif "More than" in arrivaldelay:
+            # Extract the numerical value from the string
+            arrivaldelay_value = int(arrivaldelay.split()[-1])
+        else:
+            arrivaldelay_value = 0  # Fallback in case of unexpected value
+
         data = []
         try:
             query = text("""
-                SELECT Airline, DepTime_label, Flight_Duration, Distance_type 
+                SELECT FlightDate, Airline, DepTime_label, Dep_Delay, 
+                Flight_Duration, Arr_Delay
                 FROM flights.usflightsjan1wk
-                WHERE Dep_CityName = :source AND Arr_CityName = :destination
+                WHERE Dep_CityName = :source AND Arr_CityName = :destination 
+                AND abs(Arr_Delay) >= :arrivaldelay
             """)
-            self.logger.debug(f'Executing query to fetch flights: {query} with source={source} and destination={destination}')
+            self.logger.debug(
+                f'Executing query to fetch flights: {query} with source={source} and destination={destination} and arrivaldelay={arrivaldelay_value}')
             with self.get_connection() as connection:
-                result = connection.execute(query, {'source': source, 'destination': destination})
+                result = connection.execute(query, {'source': source, 'destination': destination,
+                                                    'arrivaldelay': arrivaldelay_value})
                 data = result.fetchall()
             self.logger.info('All flights fetched successfully.')
         except Exception as e:
@@ -151,6 +165,7 @@ class DB:
                 SELECT Arr_CityName FROM flights.usflightsjan1wk) t
                 GROUP BY t.Dep_CityName
                 ORDER BY COUNT(*) DESC
+                Limit 50                
             """)
             self.logger.debug(f'Executing query to fetch busy airports: {query}')
             with self.get_connection() as connection:
@@ -170,6 +185,7 @@ class DB:
             query = text("""
                 SELECT FlightDate, COUNT(*) 
                 FROM flights.usflightsjan1wk
+                where abs(arr_delay) > 30
                 GROUP BY FlightDate
             """)
             self.logger.debug(f'Executing query to fetch daily frequency: {query}')

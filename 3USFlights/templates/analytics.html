@@ -6,11 +6,14 @@
 </head>
 <body>
     <h1>Analytics</h1>
-    <h2>Airline Frequency</h2>
+    <a href="/">Home</a><br>
+    <a href="/check_flights">Check Flights</a><br><br>
+    <h3>These are interactive Plotly graphs</h3>
+    <h2>Airline Frequency for all days of week</h2>
     {{ pie_chart|safe }}
-    <h2>Busy Airports</h2>
+    <h2>Top 50 Busy Airports in Descending order</h2>
     {{ bar_chart|safe }}
-    <h2>Daily Flight Frequency</h2>
+    <h2>Daily Flight Frequency with arrival delay more than 30 minutes</h2>
     {{ line_chart|safe }}
 </body>
 </html>

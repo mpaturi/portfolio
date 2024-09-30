@@ -15,16 +15,16 @@ os.makedirs(log_dir, exist_ok=True)
 
 log_file_path = os.path.join(log_dir, 'app.log')
 file_handler = logging.FileHandler(log_file_path)
-file_handler.setLevel(logging.DEBUG)
+file_handler.setLevel(logging.WARNING)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(formatter)
 
 application.logger.addHandler(file_handler)
-application.logger.setLevel(logging.DEBUG)
+application.logger.setLevel(logging.WARNING)
 
 # Also print to stdout for immediate feedback (optional)
 console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.DEBUG)
+console_handler.setLevel(logging.WARNING)
 console_handler.setFormatter(formatter)
 application.logger.addHandler(console_handler)
 
@@ -32,25 +32,51 @@ application.logger.addHandler(console_handler)
 def index():
     return render_template('index.html')
 
-@application.route('/check_flights', methods=['get', 'post'])
+@application.route('/check_flights', methods=['GET', 'POST'])
 def check_flights():
-    dep_city = None
-    arr_city = None
+    dep_city = request.form.get('dep_city', '')
+    arr_city = request.form.get('arr_city', '')
+    arr_delay = request.form.get('arr_delay', '')
+
     if request.method == 'POST':
-        application.logger.info('Received POST request for check_flights')
-        dep_city = request.form.get('dep_city')
-        arr_city = request.form.get('arr_city')
-        if dep_city and arr_city:
-            application.logger.info(f'Fetching flights from {dep_city} to {arr_city}')
+        if dep_city and arr_city and arr_delay:
+            application.logger.info(f'Fetching flights from {dep_city} to {arr_city} with '
+                                    f'arrival delay more than{arr_delay}')
             try:
-                results = db.fetch_all_flights(dep_city, arr_city)
-                return render_template('check_flights.html', results=results, dep_city=dep_city, arr_city=arr_city)
+                results = db.fetch_all_flights(dep_city, arr_city, arr_delay)
+                # Check if results are empty
+                if not results:
+                    no_flights_message = "There are no flights between these cities, please select another city or cities."
+                    return render_template('check_flights.html',
+                                           results=results,
+                                           city_names=sorted(db.fetch_city_names()),
+                                           dep_city=dep_city,
+                                           arr_city=arr_city,
+                                           arr_delay=arr_delay,
+                                           no_flights_message=no_flights_message)
+
+                return render_template('check_flights.html',
+                                       results=results,
+                                       city_names=sorted(db.fetch_city_names()),
+                                       dep_city=dep_city,
+                                       arr_city=arr_city,
+                                       arr_delay=arr_delay)
             except Exception as e:
                 application.logger.error(f"Error fetching flights: {e}")
+                return render_template('check_flights.html',
+                                       error="Could not fetch flights. Please try again.",
+                                       city_names=sorted(db.fetch_city_names()),
+                                       dep_city=dep_city,
+                                       arr_city=arr_city,
+                                       arr_delay=arr_delay)
 
     application.logger.info('Handling GET request for check_flights')
     city_names = sorted(db.fetch_city_names())
-    return render_template('check_flights.html', city_names=city_names, dep_city=dep_city, arr_city=arr_city)
+    return render_template('check_flights.html',
+                           city_names=city_names,
+                           dep_city=dep_city,
+                           arr_city=arr_city,
+                           arr_delay=arr_delay)
 
 @application.route('/analytics')
 def analytics():
@@ -60,23 +86,20 @@ def analytics():
         pie_chart = pie_fig.to_html(full_html=False)
     except Exception as e:
         application.logger.error(f"Error generating pie chart: {e}")
-        pie_chart = "Error generating chart"
 
     try:
         city, frequency1 = db.busy_airport()
-        bar_fig = px.bar(x=city, y=frequency1, labels={'x': 'City', 'y': 'Frequency'}, title='Busy Airports')
+        bar_fig = px.bar(x=city, y=frequency1, labels={'x': 'City', 'y': 'Frequency'})
         bar_chart = bar_fig.to_html(full_html=False)
     except Exception as e:
         application.logger.error(f"Error generating bar chart: {e}")
-        bar_chart = "Error generating chart"
 
     try:
         date, frequency2 = db.daily_frequency()
-        line_fig = px.line(x=date, y=frequency2, labels={'x': 'Date', 'y': 'Frequency'}, title='Daily Flight Frequency')
+        line_fig = px.line(x=date, y=frequency2, labels={'x': 'Date', 'y': 'Frequency'})
         line_chart = line_fig.to_html(full_html=False)
     except Exception as e:
         application.logger.error(f"Error generating line chart: {e}")
-        line_chart = "Error generating chart"
 
     return render_template('analytics.html', pie_chart=pie_chart, bar_chart=bar_chart, line_chart=line_chart)
 

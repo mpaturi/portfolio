@@ -6,43 +6,62 @@
 </head>
 <body>
     <h1>Check Flights</h1>
+    <a href="/">Home</a><br>
+    <a href="/analytics">Analytics</a><br><br>
     <form method="post">
-        <label for='dep_city'>Departure City:</label>
-        <select name="dep_city" id="dep_city">
-            {% for dep_city in city_names %}
-            <option value="{{ dep_city }}">{{ dep_city }}</option>
-            <!--option value="{{ dep_city }}" {% if dep_city == dep_city %}selected{% endif %}>{{ dep_city }}</option-->
-            {% endfor %}
-        </select>
-        <label for="arr_city">Arrival City:</label>
-        <select name="arr_city" id="arr_city">
-            {% for arr_city in city_names %}
-            <option value="{{ arr_city }}">{{ arr_city }}</option>
-            <!--option value="{{ arr_city }}" {% if arr_city == arr_city %}selected{% endif %}>{{ arr_city }}</option-->
-            {% endfor %}
-        </select>
-        <button type="submit">Search</button>
-    </form>
+    <label for="dep_city">Departure City:</label>
+    <select name="dep_city" id="dep_city">
+        {% for city in city_names %}
+            <option value="{{ city }}" {% if city == dep_city %}selected{% endif %}>{{ city }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="arr_city">Arrival City:</label>
+    <select name="arr_city" id="arr_city">
+        {% for city in city_names %}
+            <option value="{{ city }}" {% if city == arr_city %}selected{% endif %}>{{ city }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="arr_delay">Arrival Delay(in minutes):</label>
+    <select name="arr_delay" id="arr_delay">
+        <option value="On Time" {% if arr_delay is not defined or arr_delay == "" %}selected{% endif %}>0</option>
+        <option value="More than 20" {% if arr_delay == "More than 20" %}selected{% endif %}>20</option>
+        <option value="More than 30" {% if arr_delay == "More than 30" %}selected{% endif %}>30</option>
+        <option value="More than 45" {% if arr_delay == "More than 45" %}selected{% endif %}>45</option>
+        <option value="More than 60" {% if arr_delay == "More than 60" %}selected{% endif %}>60</option>
+    </select>
+
+    <button type="submit">Search</button>
+</form>
     {% if results %}
     <h2>Flight Results</h2>
     <table border="1">
         <thead>
             <tr>
+                <th>Flight Date</th>
                 <th>Airline</th>
-                <th>Depature</th>
+                <th>Departure Time</th>
+                <th>Departure Delay</th>
                 <th>Duration</th>
-                <th>Distance Type</th>
+                <th>Arrival Delay</th>
             </tr>
         </thead>
         <tbody>
             {% for row in results %}
             <tr>
+                <td>{{ row.FlightDate }}</td>
                 <td>{{ row.Airline }}</td>
                 <td>{{ row.DepTime_label }}</td>
+                <td>{{ row.Dep_Delay }}</td>
                 <td>{{ row.Flight_Duration}}</td>
-                <td>{{ row.Distance_type }}</td>
+                <td>{{ row.Arr_Delay }}</td>
             </tr>
             {% endfor %}
+        {% else %}
+        {% if no_flights_message %}
+            <p style="color: red;">{{ no_flights_message }}</p>
+        {% endif %}
         </tbody>
     </table>
     {% endif %}
